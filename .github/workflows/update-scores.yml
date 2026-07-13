@@ -1,0 +1,40 @@
+name: Update World Cup Scores
+
+on:
+  schedule:
+    # 每小时运行一次（UTC）。世界杯期间比赛密集，1 小时粒度足够免费白嫖。
+    - cron: '17 * * * *'
+  workflow_dispatch:  # 允许手动触发
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run scorer scraper
+        run: python scraper.py
+        env:
+          ESPN_API_URL: ${{ vars.ESPN_API_URL || 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard' }}
+          OUTPUT_PATH: data.json
+
+      - name: Commit and push data.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore: update world cup scores [$(date -u +'%Y-%m-%d %H:%M UTC')]"
+            git push
+          fi

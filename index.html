@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2026 世界杯 · 百家乐大路图</title>
+  <style>
+    :root {
+      --bg: #0b1320;
+      --panel: #111b2b;
+      --text: #e8eef6;
+      --muted: #8fa3b8;
+      --banker: #ff3b3b;
+      --player: #3b82ff;
+      --tie: #22c55e;
+      --grid: #1e2d42;
+      --grid-active: #25364d;
+      --accent: #f59e0b;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 18px 24px;
+      background: linear-gradient(90deg, #0f1b2d 0%, #16263b 100%);
+      border-bottom: 1px solid var(--grid);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: conic-gradient(var(--banker) 0deg 120deg, var(--player) 120deg 240deg, var(--tie) 240deg 360deg);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 12px;
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,.4);
+      flex-shrink: 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.3;
+    }
+
+    h1 span {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .controls input {
+      width: 260px;
+      max-width: 40vw;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--grid);
+      background: #0d1522;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+    }
+
+    .controls input:focus { border-color: var(--accent); }
+
+    .btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: none;
+      background: var(--accent);
+      color: #1a1200;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+
+    .btn:hover { opacity: .88; }
+    .btn.secondary { background: var(--grid); color: var(--text); }
+
+    .legend {
+      display: flex;
+      gap: 16px;
+      padding: 10px 24px;
+      font-size: 12px;
+      color: var(--muted);
+      background: rgba(0,0,0,.15);
+      border-bottom: 1px solid var(--grid);
+      flex-wrap: wrap;
+    }
+
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+
+    .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid;
+      background: transparent;
+    }
+
+    .dot.banker { border-color: var(--banker); }
+    .dot.player { border-color: var(--player); }
+    .dot.tie {
+      border-color: transparent;
+      background: linear-gradient(45deg, transparent 45%, var(--tie) 45%, var(--tie) 55%, transparent 55%);
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 16px;
+      gap: 12px;
+    }
+
+    .chart-wrap {
+      flex: 1;
+      background: var(--panel);
+      border: 1px solid var(--grid);
+      border-radius: 12px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      position: relative;
+      cursor: grab;
+      user-select: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .chart-wrap:active { cursor: grabbing; }
+
+    .chart-wrap::-webkit-scrollbar { height: 10px; }
+    .chart-wrap::-webkit-scrollbar-track { background: #0b1320; }
+    .chart-wrap::-webkit-scrollbar-thumb { background: #2a405e; border-radius: 5px; }
+
+    .chart {
+      position: relative;
+      height: 100%;
+      min-height: 360px;
+    }
+
+    .grid-bg {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .grid-line {
+      position: absolute;
+      background: var(--grid);
+    }
+
+    .grid-line.h { left: 0; right: 0; height: 1px; }
+    .grid-line.v { top: 0; bottom: 0; width: 1px; }
+
+    .cell {
+      position: absolute;
+      display: grid;
+      place-items: center;
+    }
+
+    .circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 3px solid;
+      background: transparent;
+      position: relative;
+      z-index: 2;
+      transition: transform .15s;
+    }
+
+    .circle.banker { border-color: var(--banker); box-shadow: 0 0 12px rgba(255,59,59,.22); }
+    .circle.player { border-color: var(--player); box-shadow: 0 0 12px rgba(59,130,255,.22); }
+
+    .circle.ghost {
+      border-style: dashed;
+      border-color: var(--muted);
+      opacity: .5;
+    }
+
+    .tie-line {
+      position: absolute;
+      width: 46%;
+      height: 3px;
+      background: var(--tie);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      border-radius: 2px;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .tie-count {
+      position: absolute;
+      right: -4px;
+      top: -6px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      border-radius: 8px;
+      background: var(--tie);
+      color: #04280f;
+      font-size: 10px;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      z-index: 4;
+      box-shadow: 0 2px 4px rgba(0,0,0,.3);
+    }
+
+    .cell:hover .circle { transform: scale(1.12); }
+
+    .empty-state {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      text-align: center;
+      padding: 24px;
+    }
+
+    .tooltip {
+      position: fixed;
+      z-index: 100;
+      background: rgba(13, 21, 34, .96);
+      border: 1px solid var(--grid);
+      border-radius: 10px;
+      padding: 12px 14px;
+      min-width: 220px;
+      max-width: 320px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.45);
+      backdrop-filter: blur(8px);
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity .15s, transform .15s;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .tooltip.visible { opacity: 1; transform: translateY(0); }
+
+    .tooltip-title {
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .tooltip-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .tooltip-row strong { color: var(--text); }
+
+    .status-bar {
+      padding: 10px 24px;
+      background: rgba(0,0,0,.18);
+      border-top: 1px solid var(--grid);
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .status-bar .ok { color: var(--tie); }
+    .status-bar .err { color: var(--banker); }
+
+    @media (max-width: 640px) {
+      header { padding: 14px 16px; }
+      .controls input { width: 100%; max-width: none; }
+      h1 { font-size: 16px; }
+      .legend { padding: 8px 16px; gap: 10px; }
+      main { padding: 10px; }
+      .status-bar { padding: 8px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">WC</div>
+      <h1>
+        2026 世界杯 · 百家乐大路图
+        <span>把每场赛果映射成庄 / 闲 / 和的走势长龙</span>
+      </h1>
+    </div>
+    <div class="controls">
+      <input id="dataUrl" type="text" placeholder="data.json 或 matches.json URL" value="matches.json" />
+      <button class="btn" id="btnLoad">加载数据</button>
+      <button class="btn secondary" id="btnDemo">重放模拟</button>
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="legend-item"><div class="dot banker"></div> 庄赢（主队胜）</div>
+    <div class="legend-item"><div class="dot player"></div> 闲赢（客队胜）</div>
+    <div class="legend-item"><div class="dot tie"></div> 和局（常规时间打平 / 点球大战不计）</div>
+    <div class="legend-item">矩阵 6 行 · 同结果向下排列 · 满 6 行向右拐弯 · 切换结果换列</div>
+  </div>
+
+  <main>
+    <div class="chart-wrap" id="chartWrap">
+      <div class="chart" id="chart"></div>
+    </div>
+  </main>
+
+  <div class="status-bar">
+    <div id="statusText">就绪，等待加载数据…</div>
+    <div id="statText">庄 0 · 闲 0 · 和 0</div>
+  </div>
+
+  <div class="tooltip" id="tooltip">
+    <div class="tooltip-title" id="ttTitle"></div>
+    <div id="ttBody"></div>
+  </div>
+
+  <script>
+    // ===================== 配置区 =====================
+    const CONFIG = {
+      rows: 6,
+      cellSize: 60,
+      defaultUrl: 'matches.json',
+      fetchOptions: { cache: 'no-store' }
+    };
+
+    // ===================== 大路图核心算法 =====================
+    class BigRoad {
+      constructor(rows = 6) {
+        this.rows = rows;
+        this.cells = new Map(); // key: "col,row" -> cell
+        this.lastResult = null; // 'B' | 'P' | null
+        this.lastCell = null;   // 最后一个庄/闲结果所在 cell
+        this.stats = { B: 0, P: 0, T: 0 };
+      }
+
+      static key(col, row) { return `${col},${row}`; }
+
+      get(col, row) { return this.cells.get(BigRoad.key(col, row)); }
+      set(col, row, data) { this.cells.set(BigRoad.key(col, row), data); return data; }
+
+      reset() {
+        this.cells.clear();
+        this.lastResult = null;
+        this.lastCell = null;
+        this.stats = { B: 0, P: 0, T: 0 };
+      }
+
+      // 解析单场比赛的结果
+      static resolveMatch(match) {
+        const home = Number(match.regular_time_home_score ?? match.home_score ?? 0);
+        const away = Number(match.regular_time_away_score ?? match.away_score ?? 0);
+        if (home > away) return 'B';
+        if (home < away) return 'P';
+        return 'T';
+      }
+
+      push(match) {
+        const result = BigRoad.resolveMatch(match);
+        this.stats[result]++;
+
+        if (result === 'T') {
+          this.pushTie(match);
+        } else {
+          this.pushBankerOrPlayer(result, match);
+        }
+      }
+
+      pushTie(match) {
+        if (this.lastCell) {
+          // 常规情况：和局加在最后一个庄/闲圈上
+          this.lastCell.ties = (this.lastCell.ties || 0) + 1;
+          this.lastCell.matches.push(match);
+          return;
+        }
+
+        // 开局连续和局：先占住 (0,0) 画绿线，等庄/闲出现再补圈
+        let cell = this.get(0, 0);
+        if (!cell) {
+          cell = this.set(0, 0, {
+            col: 0,
+            row: 0,
+            result: null,
+            ties: 1,
+            matches: [match]
+          });
+        } else {
+          cell.ties = (cell.ties || 0) + 1;
+          cell.matches.push(match);
+        }
+      }
+
+      pushBankerOrPlayer(result, match) {
+        if (!this.lastCell) {
+          // 首局就是庄/闲，或者前面只有和局
+          let cell = this.get(0, 0);
+          if (!cell) {
+            cell = this.set(0, 0, {
+              col: 0, row: 0, result, ties: 0, matches: [match]
+            });
+          } else {
+            // 已有开局和局占位，补圈但保留和计数
+            cell.result = result;
+            cell.matches.push(match);
+          }
+          this.lastResult = result;
+          this.lastCell = cell;
+          return;
+        }
+
+        if (this.lastResult === result) {
+          // 长龙：继续同结果
+          this.continueDragon(result, match);
+        } else {
+          // 换列：结果切换，从新列第一行开始
+          this.switchColumn(result, match);
+        }
+      }
+
+      continueDragon(result, match) {
+        const { col, row } = this.lastCell;
+        const nextRow = row + 1;
+
+        if (nextRow < this.rows && !this.get(col, nextRow)) {
+          // 向下延伸
+          const cell = this.set(col, nextRow, {
+            col, row: nextRow, result, ties: 0, matches: [match]
+          });
+          this.lastCell = cell;
+        } else {
+          // 到达底部或下一格被占，向右拐弯，保持在同一行
+          let nextCol = col + 1;
+          while (this.get(nextCol, row)) nextCol++;
+          const cell = this.set(nextCol, row, {
+            col: nextCol, row, result, ties: 0, matches: [match]
+          });
+          this.lastCell = cell;
+        }
+      }
+
+      switchColumn(result, match) {
+        let col = this.lastCell.col + 1;
+        // 百家乐换列时从第 0 行开始；找第 0 行第一个空列
+        while (this.get(col, 0)) col++;
+        const cell = this.set(col, 0, {
+          col, row: 0, result, ties: 0, matches: [match]
+        });
+        this.lastResult = result;
+        this.lastCell = cell;
+      }
+
+      getColumns() {
+        let max = -1;
+        for (const cell of this.cells.values()) {
+          if (cell.col > max) max = cell.col;
+        }
+        return max + 1;
+      }
+    }
+
+    // ===================== 渲染层 =====================
+    const chart = document.getElementById('chart');
+    const chartWrap = document.getElementById('chartWrap');
+    const tooltip = document.getElementById('tooltip');
+    const ttTitle = document.getElementById('ttTitle');
+    const ttBody = document.getElementById('ttBody');
+    const statusText = document.getElementById('statusText');
+    const statText = document.getElementById('statText');
+
+    function render(road) {
+      chart.innerHTML = '';
+      const cols = Math.max(road.getColumns(), 12); // 至少 12 列，避免太空
+      const width = cols * CONFIG.cellSize;
+      const height = CONFIG.rows * CONFIG.cellSize;
+
+      chart.style.width = `${width}px`;
+      chart.style.height = `${height}px`;
+
+      // 画网格背景
+      const gridBg = document.createElement('div');
+      gridBg.className = 'grid-bg';
+
+      for (let r = 0; r <= CONFIG.rows; r++) {
+        const line = document.createElement('div');
+        line.className = 'grid-line h';
+        line.style.top = `${r * CONFIG.cellSize}px`;
+        gridBg.appendChild(line);
+      }
+      for (let c = 0; c <= cols; c++) {
+        const line = document.createElement('div');
+        line.className = 'grid-line v';
+        line.style.left = `${c * CONFIG.cellSize}px`;
+        gridBg.appendChild(line);
+      }
+      chart.appendChild(gridBg);
+
+      // 渲染所有 cell
+      for (const cell of road.cells.values()) {
+        const el = document.createElement('div');
+        el.className = 'cell';
+        el.style.left = `${cell.col * CONFIG.cellSize}px`;
+        el.style.top = `${cell.row * CONFIG.cellSize}px`;
+        el.style.width = `${CONFIG.cellSize}px`;
+        el.style.height = `${CONFIG.cellSize}px`;
+
+        if (cell.result) {
+          const circle = document.createElement('div');
+          circle.className = `circle ${cell.result === 'B' ? 'banker' : 'player'}`;
+          el.appendChild(circle);
+        } else if (cell.ties > 0) {
+          // 只有和局占位（开局连续和）时，显示虚线占位圈
+          const circle = document.createElement('div');
+          circle.className = 'circle ghost';
+          el.appendChild(circle);
+        }
+
+        // 和局斜线与计数
+        for (let i = 0; i < (cell.ties || 0); i++) {
+          const line = document.createElement('div');
+          line.className = 'tie-line';
+          // 多次和局时微微错开，避免完全重叠
+          line.style.transform = `translate(-50%, -50%) rotate(${-45 + i * 3}deg)`;
+          el.appendChild(line);
+        }
+
+        if (cell.ties > 1) {
+          const count = document.createElement('div');
+          count.className = 'tie-count';
+          count.textContent = cell.ties;
+          el.appendChild(count);
+        }
+
+        // 交互数据
+        el.dataset.matches = JSON.stringify(cell.matches);
+        el.addEventListener('mouseenter', (e) => showTooltip(e, cell));
+        el.addEventListener('mouseleave', hideTooltip);
+        el.addEventListener('touchstart', (e) => showTooltip(e, cell), { passive: true });
+        chart.appendChild(el);
+      }
+
+      if (road.cells.size === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.innerHTML = '<div>暂无数据<br>请加载 matches.json 或配置真实数据源</div>';
+        chart.appendChild(empty);
+      }
+
+      statText.textContent = `庄 ${road.stats.B} · 闲 ${road.stats.P} · 和 ${road.stats.T}`;
+    }
+
+    function showTooltip(e, cell) {
+      const matches = cell.matches;
+      if (!matches || matches.length === 0) return;
+
+      const last = matches[matches.length - 1];
+      const resultText = cell.result === 'B' ? '庄赢（主队胜）' :
+                         cell.result === 'P' ? '闲赢（客队胜）' : '和局占位';
+
+      ttTitle.textContent = resultText;
+      ttBody.innerHTML = matches.map(m => {
+        const home = m.home_team;
+        const away = m.away_team;
+        const hs = m.regular_time_home_score ?? m.home_score ?? 0;
+        const as = m.regular_time_away_score ?? m.away_score ?? 0;
+        return `<div class="tooltip-row">
+          <span>${m.stage || '比赛'} · ${m.date || ''}</span>
+        </div>
+        <div class="tooltip-row">
+          <strong>${home} ${hs} - ${as} ${away}</strong>
+        </div>`;
+      }).join('');
+
+      if (cell.ties > 0) {
+        ttBody.innerHTML += `<div class="tooltip-row" style="margin-top:8px;color:var(--tie)">
+          本格累计和局 ${cell.ties} 场
+        </div>`;
+      }
+
+      tooltip.classList.add('visible');
+      positionTooltip(e);
+    }
+
+    function hideTooltip() {
+      tooltip.classList.remove('visible');
+    }
+
+    function positionTooltip(e) {
+      const rect = tooltip.getBoundingClientRect();
+      let x = e.clientX + 16;
+      let y = e.clientY + 16;
+      if (x + rect.width > window.innerWidth) x = e.clientX - rect.width - 10;
+      if (y + rect.height > window.innerHeight) y = e.clientY - rect.height - 10;
+      tooltip.style.left = `${Math.max(8, x)}px`;
+      tooltip.style.top = `${Math.max(8, y)}px`;
+    }
+
+    document.addEventListener('mousemove', (e) => {
+      if (tooltip.classList.contains('visible')) positionTooltip(e);
+    });
+
+    // 鼠标滚轮横向滚动
+    chartWrap.addEventListener('wheel', (e) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        e.preventDefault();
+        chartWrap.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
+
+    // 拖拽滚动
+    let isDragging = false;
+    let startX = 0;
+    let scrollLeft = 0;
+
+    chartWrap.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      startX = e.pageX - chartWrap.offsetLeft;
+      scrollLeft = chartWrap.scrollLeft;
+    });
+
+    chartWrap.addEventListener('mouseleave', () => isDragging = false);
+    chartWrap.addEventListener('mouseup', () => isDragging = false);
+    chartWrap.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      e.preventDefault();
+      const x = e.pageX - chartWrap.offsetLeft;
+      const walk = (x - startX) * 1.2;
+      chartWrap.scrollLeft = scrollLeft - walk;
+    });
+
+    // ===================== 数据加载 =====================
+    const road = new BigRoad(CONFIG.rows);
+    const seenIds = new Set();
+
+    async function loadData(url) {
+      statusText.textContent = `正在请求 ${url} …`;
+      try {
+        const res = await fetch(url, CONFIG.fetchOptions);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const matches = Array.isArray(data) ? data : (data.matches || []);
+
+        let added = 0;
+        for (const m of matches) {
+          if (!m.id) continue;
+          if (m.status && m.status !== 'FINISHED' && m.status !== 'completed') continue;
+          if (seenIds.has(m.id)) continue;
+          seenIds.add(m.id);
+          road.push(m);
+          added++;
+        }
+
+        render(road);
+        statusText.innerHTML = `已加载 <span class="ok">${added}</span> 场新比赛，累计 ${seenIds.size} 场`;
+
+        // 自动滚动到最右侧
+        setTimeout(() => {
+          chartWrap.scrollLeft = chartWrap.scrollWidth - chartWrap.clientWidth;
+        }, 50);
+      } catch (err) {
+        statusText.innerHTML = `<span class="err">加载失败：${err.message}</span>`;
+        console.error(err);
+      }
+    }
+
+    document.getElementById('btnLoad').addEventListener('click', () => {
+      const url = document.getElementById('dataUrl').value.trim() || CONFIG.defaultUrl;
+      loadData(url);
+    });
+
+    document.getElementById('btnDemo').addEventListener('click', () => {
+      road.reset();
+      seenIds.clear();
+      loadData(CONFIG.defaultUrl);
+    });
+
+    // 页面加载时自动读取默认数据源
+    loadData(CONFIG.defaultUrl);
+
+    // 可选：定时刷新真实 API（默认不开启，避免滥用）
+    // setInterval(() => loadData(document.getElementById('dataUrl').value.trim()), 60000);
+  </script>
+</body>
+</html>
