@@ -23,6 +23,18 @@
       "regular_time_away_score": 2,
       "date": "2026-07-15",
       "status": "FINISHED"
+    },
+    {
+      "id": "760516",
+      "stage": "世界杯",
+      "home_team": "France",
+      "away_team": "England",
+      "home_score": 4,
+      "away_score": 6,
+      "regular_time_home_score": 4,
+      "regular_time_away_score": 6,
+      "date": "2026-07-18",
+      "status": "FINISHED"
     }
   ]
 }
